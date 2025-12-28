@@ -12,14 +12,25 @@ var logPrint = logger_pkg.Logger(printer: logger_pkg.PrettyPrinter());
 class R1Device {
   // variabili del dispositivo R1
   String deviceId = ""; //MAC Address del dispositivo
-  bool dispositivoTrovato =
-      false; //flag che indica se il dispositivo è stato trovato
-  dynamic
-  connessioneBLE; //oggetto che contiene la connessione BLE al dispositivo
-  dynamic qualifiedCharList; //lista delle caratteristiche GATT del dispositivo
+  bool dispositivoTrovato = false; //flag che indica se il dispositivo è stato trovato
 
+  double temperatura = 0.0; //°C
+  double umidita = 0.0; //%RH
+  int co2 = 0; //ppm
+  int voc = 0; // indice SENSIRION
+  int aqiTotale = 0;
+  int aqiHT = 0;    
+  int aqiCO2 = 0;
+  int aqiVOC = 0;
+  String firmwareVersion = "";
+
+  dynamic connessioneBLE; //oggetto che contiene la connessione BLE al dispositivo
+  dynamic qualifiedCharList; //lista delle caratteristiche GATT del dispositivo
   final flutterReactiveBle = FlutterReactiveBle();
 
+  // *********** COSTANTI DEL DISPOSITIVO R1 ***********
+
+  //costante di timeout per la connessione BLE
   static const bleConnectionTimeout = 5; //timeout di connessione in secondi
 
   // ID BLE GATT dle servizio di Environmental Sensing
@@ -132,10 +143,51 @@ class R1Device {
     if (connessioneBLE != null) {
       for (QualifiedCharacteristic qualChar in qualifiedCharList) {
         final response = await flutterReactiveBle.readCharacteristic(qualChar);
-        logPrint.i(
-          "Characteristic: ${qualChar.characteristicId} - Value: $response  ",
-        );
+        //logPrint.i("Characteristic: ${qualChar.characteristicId} - Value: $response",);
+        parseData(qualChar.characteristicId.toString(), response);
       }
+      logPrint.i("Temperatura = $temperatura °C, Umidità = $umidita %RH, CO2 = $co2 ppm");
+      logPrint.i("VOC = $voc, AQI Totale = $aqiTotale, Firmware = $firmwareVersion");
+      logPrint.i("AQI HT = $aqiHT, AQI CO2 = $aqiCO2, AQI VOC = $aqiVOC ");
     }
   }
+
+  void parseData(String id, List<int> readingValue) {
+    switch (id.toUpperCase()) {
+      case "2A6E": // Temperature
+        temperatura = (readingValue[0] + readingValue[1]*256) / 100;
+        break;
+      case "2A6F": // Humidity
+        umidita = (readingValue[0] + readingValue[1]*256) / 100;
+        break;
+      case "2B8C": // CO2
+        co2 = readingValue[0] + readingValue[1]*256;
+        break;
+      case "2BE7": // VOC
+        voc = readingValue[0] + readingValue[1]*256;
+        break;
+      case "FF01": // AQI Total
+        aqiTotale = readingValue[0];  
+        break;
+      case "FF02": // AQI HT
+        aqiHT = readingValue[0];
+        break;
+      case "FF03": // AQI CO2
+        aqiCO2 = readingValue[0];
+        break;  
+      case "FF04": // AQI VOC
+        aqiVOC = readingValue[0];
+        break;
+      case "FFAA": // Firmware Version
+        firmwareVersion = "v${readingValue[1]}.${readingValue[0]}";
+        break;
+      // Add cases for each characteristic UUID to parse the data accordingly
+      default:
+        logPrint.w("Unknown characteristic UUID: $id");
+    }
+
+    // Implement data parsing logic specific to R1 device
+  }
+
+
 }
