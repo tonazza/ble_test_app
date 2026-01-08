@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _findR1Device() async {
 
     // verifico se il bluetooth è attivato
-    if (_ble.status == BleStatus.poweredOff) {
+    if ((_ble.status == BleStatus.poweredOff) || (_ble.status == BleStatus.unauthorized)) {
       showDialog(context: context, builder: (context)=> AlertDialog(
         title: const Text("Bluetooth Disabled"),
         content: const Text("Please enable Bluetooth to proceed."),
@@ -91,8 +91,19 @@ class _MyHomePageState extends State<MyHomePage> {
       logPrint.i('Running on ${systemInfo.model} - Android SDK version: $sdkVersion');
       if (sdkVersion<=30) {
         if (await Geolocator.isLocationServiceEnabled() == false) {
-          logPrint.w("Location services are disabled. Please enable them.");
-          await Geolocator.openLocationSettings();
+          showDialog(context: context, builder: (context)=> AlertDialog(
+        title: const Text("Position Disabled"),
+        content: const Text("Please enable Position services to proceed."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("OK"),
+          ),
+        ], 
+      ));
+      return;
         }
         await Permission.locationWhenInUse.request();
         await Permission.bluetooth.request();
