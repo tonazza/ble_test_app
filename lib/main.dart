@@ -114,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else if (Platform.isIOS) {
       IosDeviceInfo systemInfo = await deviceInfo.iosInfo;
       logPrint.i('Running on ${systemInfo.utsname.machine} - iOS version: ${systemInfo.systemVersion} ');
+      await Permission.bluetoothScan.request();
     }
     
     dispositivoR1.findDevice();
