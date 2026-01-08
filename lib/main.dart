@@ -1,8 +1,15 @@
+import 'dart:io';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart' as logger_pkg;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'r1.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+
+final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+final FlutterReactiveBle _ble = FlutterReactiveBle();
 
 var logPrint = logger_pkg.Logger(printer: logger_pkg.PrettyPrinter());
 
@@ -10,6 +17,11 @@ Timer cicloLettura = Timer(const Duration(seconds: 0), () {});
 String r1DeviceId = "";
 const intervalloLetturaSecondi = 5;
 R1Device dispositivoR1 = R1Device();
+
+
+
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -53,7 +65,46 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _findR1Device() async {
-    await Permission.bluetoothScan.request();
+
+    // verifico se il bluetooth è attivato
+    if (_ble.status == BleStatus.poweredOff) {
+      showDialog(context: context, builder: (context)=> AlertDialog(
+        title: const Text("Bluetooth Disabled"),
+        content: const Text("Please enable Bluetooth to proceed."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("OK"),
+          ),
+        ], 
+      ));
+      return;
+    } 
+
+
+    // verifico la piattaforma e richiedo i permessi necessari
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo systemInfo = await deviceInfo.androidInfo;
+      final sdkVersion = systemInfo.version.sdkInt;
+      logPrint.i('Running on ${systemInfo.model} - Android SDK version: $sdkVersion');
+      if (sdkVersion<=30) {
+        if (await Geolocator.isLocationServiceEnabled() == false) {
+          logPrint.w("Location services are disabled. Please enable them.");
+          await Geolocator.openLocationSettings();
+        }
+        await Permission.locationWhenInUse.request();
+        await Permission.bluetooth.request();
+      } else {
+        await Permission.bluetoothScan.request();
+        await Permission.bluetoothConnect.request();
+      }
+    } else if (Platform.isIOS) {
+      IosDeviceInfo systemInfo = await deviceInfo.iosInfo;
+      logPrint.i('Running on ${systemInfo.utsname.machine} - iOS version: ${systemInfo.systemVersion} ');
+    }
+    
     dispositivoR1.findDevice();
   }
 

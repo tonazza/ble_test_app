@@ -146,9 +146,9 @@ class R1Device {
         //logPrint.i("Characteristic: ${qualChar.characteristicId} - Value: $response",);
         parseData(qualChar.characteristicId.toString(), response);
       }
-      logPrint.i("Temperatura = $temperatura °C, Umidità = $umidita %RH, CO2 = $co2 ppm");
-      logPrint.i("VOC = $voc, AQI Totale = $aqiTotale, Firmware = $firmwareVersion");
-      logPrint.i("AQI HT = $aqiHT, AQI CO2 = $aqiCO2, AQI VOC = $aqiVOC ");
+      logPrint.i("Temperatura = $temperatura °C, Umidità = $umidita %RH, CO2 = $co2 ppm\n" 
+          "VOC = $voc, AQI Totale = $aqiTotale, Firmware = $firmwareVersion\n"
+          "AQI HT = $aqiHT, AQI CO2 = $aqiCO2, AQI VOC = $aqiVOC ");
     }
   }
 
