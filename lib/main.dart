@@ -68,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // verifico se il bluetooth è attivato
     if ((_ble.status == BleStatus.poweredOff) || (_ble.status == BleStatus.unauthorized)) {
+      if (!mounted) return;
       showDialog(context: context, builder: (context)=> AlertDialog(
         title: const Text("Bluetooth Disabled"),
         content: const Text("Please enable Bluetooth to proceed."),
@@ -91,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
       logPrint.i('Running on ${systemInfo.model} - Android SDK version: $sdkVersion');
       if (sdkVersion<=30) {
         if (await Geolocator.isLocationServiceEnabled() == false) {
+          if (!mounted) return;
           showDialog(context: context, builder: (context)=> AlertDialog(
         title: const Text("Position Disabled"),
         content: const Text("Please enable Position services to proceed."),
@@ -116,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
       logPrint.i('Running on ${systemInfo.utsname.machine} - iOS version: ${systemInfo.systemVersion} ');
       await Permission.bluetoothScan.request();
     }
-    
+    if (!mounted) return;
     dispositivoR1.findDevice();
   }
 

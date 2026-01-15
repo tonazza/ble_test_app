@@ -93,7 +93,7 @@ class R1Device {
         )
         .listen(
           (device) {
-            logPrint.i("Found device: ${device.name}, id: ${device.id}");
+            //logPrint.i("Found device: ${device.name}, id: ${device.id}");
             if (device.name == deviceName) {
               connessioneBLE.cancel();
               logPrint.i("R1 device found: ${device.name}, id: ${device.id}");
